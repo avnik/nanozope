@@ -9,6 +9,16 @@ Main goals:
 - reduce memory footprint
 - be enought to support functionality needed by z3c.contents / z3c.forms
 
+
 Variours notes
 --------------
+paster setup-app  zope.ini#nanozope bootstrap zodb and fire bootstrap events.
 
+Set bootstrap_database = False in paster .ini to inhibit database events on
+startup.
+
+
+Examples
+--------
+
+docs/examples/* contains some useless examples copied from test installation

@@ -12,7 +12,7 @@ ZODB_CONNECTION_KEY = 'zodb.connection'
 
 class ZopeWSGI(object):
     def __init__(self, confvars):
-        config = Configuration(confvars)
+        self.config = config = Configuration(confvars)
         self.root_name = config.paster['root_name']
         self.zodb_key = config.paster['zodb_connection']
         self.publication = MinimalisticPublisher(self.root_name)
@@ -27,7 +27,10 @@ class ZopeWSGI(object):
         root = conn.root()
         rootsite = root.get(self.root_name, None)
         if rootsite is None:
-            raise RuntimeError("Can't found %s in ZODB" % self.roon_name)
+            if self.config.paster['bootstrap_database']:
+                bootstrap_database(conn, self.root_name)
+            else:
+                raise RuntimeError("Can't found %s in ZODB" % self.roon_name)
         #hack to pass connection obtained from repoze.zodbconn
         request.annotations[ZODB_ANNOTATION_KEY] = rootsite
 

@@ -23,6 +23,7 @@ install_requires=[
     'zope.security',
     'zope.authentication',
     'zope.processlifetime',
+    'zope.site',
     'repoze.zodbconn',
     ]
 

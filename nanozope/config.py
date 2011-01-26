@@ -11,9 +11,9 @@ from nanozope.bootstrap import load_configuration, bootstrap_database
 class IPasterVariables(Interface):
     configure_zcml = BytesLine(title=u"configure.zcml")
     zodb_connection = BytesLine(title=u"ZODB connection key",
-        required=False, default=ZODB_CONNECTION_KEY)
+        required=True, default=ZODB_CONNECTION_KEY)
     bootstrap_database = Bool(title=u"send bootstrap events",
-        required=False, default=True)
+        required=True, default=True)
     zodb_uri = BytesLine(title=u"ZODB URI")
     root_name = BytesLine(title=u"ZODB Root name",
         required=True, default="Application")
@@ -27,11 +27,10 @@ class Configuration(object):
 
         self.paster = toargs(self, IPasterVariables, paster_variables)
 
-        getGlobalSiteManager().registerUtility(IConfiguration, component=self)
+        getGlobalSiteManager().registerUtility(provided=IConfiguration,
+            component=self)
         
         load_configuration(self.paster['configure_zcml'])
 
-        if self.paster['bootstrap_database']:
-            bootstrap_database(self.paster['zodb_uri'])
         
 

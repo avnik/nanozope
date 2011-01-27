@@ -17,6 +17,7 @@ from zope.authentication.interfaces import IFallbackUnauthenticatedPrincipal
 from zope.authentication.interfaces import IAuthentication
 from zope.security.proxy import removeSecurityProxy
 from zope.traversing.interfaces import BeforeTraverseEvent
+from interfaces import AfterCallEvent
 
 # Name choosed to be compatible with standard zopepublisher
 ZODB_ANNOTATION_KEY = "ZODB.interfaces.IConnection"
@@ -75,11 +76,10 @@ class MinimalisticPublisher(object):
     def callObject(self, request, ob):
         # Exception handling, dont try to call request.method
         orig = ob
-        if not IHTTPException.providedBy(ob):
-            ob = queryMultiAdapter((ob, request), name=request.method)
-            ob = getattr(ob, request.method, None)
-            if ob is None:
-                raise MethodNotAllowed(orig, request)
+        #if not IHTTPException.providedBy(ob):
+        #    ob = getattr(ob, request.method, None)
+        #    if ob is None:
+        #        raise MethodNotAllowed(orig, request)
         return mapply(ob, request.getPositionalArguments(), request)
 
     def afterCall(self, request, obj):
@@ -87,7 +87,7 @@ class MinimalisticPublisher(object):
            request.response.setResult('')
 
         notify(AfterCallEvent(request, obj))
-        encInteraction()
+        endInteraction()
 
     def traverseName(self, request, obj, name):
         return self.traverser.traverseName(request, obj, name)
@@ -119,19 +119,19 @@ class MinimalisticPublisher(object):
         self.authenticate(request, sm)
 
     def authenticate(self, request, sm, fallback=False):
+        principal = None
         auth = sm.queryUtility(IAuthentication)
-        if auth is None:
-            # No auth utility here
-            return
+        if auth is not None:
 
-        # Try to authenticate against the auth utility
-        principal = auth.authenticate(request)
-        if principal is None:
-            principal = auth.unauthenticatedPrincipal()
+            # Try to authenticate against the auth utility
+            principal = auth.authenticate(request)
             if principal is None:
-                # nothing to do here
-                if not fallback:
-                    return
-                principal = getUtility(IFallbackUnauthenticatedPrincipal)
+                principal = auth.unauthenticatedPrincipal()
+
+        if principal is None:
+            # nothing to do here
+            if not fallback:
+                return
+            principal = getUtility(IFallbackUnauthenticatedPrincipal)
 
         request.setPrincipal(principal)
